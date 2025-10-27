@@ -1,0 +1,11 @@
+{
+    "name": "rabie_rabit/github-api",
+    "description": "An Github API",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "RabieRabit\\GithubApi\\": "src/"
+        }
+    },
+    "require": {}
+}
