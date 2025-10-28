@@ -2,11 +2,13 @@
 
 namespace RabieRabit\GithubApi\Issues;
 
+use RabieRabit\GithubApi\Formatter\IssueFormatter;
 use RabieRabit\GithubApi\Github;
 
 class Issues {
     protected Github $github;
-    protected int $issue;
+    protected array $issue;
+    protected int $issueNumber;
 
     /**
      * Initialize the Issues service.
@@ -25,7 +27,8 @@ class Issues {
      * @param int $issue_number The issue number to target. Use -1 to reset to no specific issue.
      */
     public function setIssueNumber(int $issue_number): void {
-        $this->issue = $issue_number;
+        $this->issueNumber = $issue_number;
+        $this->issue = $this->initIssue();
     }
 
     /**
@@ -33,7 +36,11 @@ class Issues {
      *
      * @return array JSON response from the API containing a list of issues.
      */
-    public function list(): array{
+    public function list($options = []): array{
+
+        $options = array_merge([
+        ], $options);
+
         $ch = curl_init("{$this->github->getBaseUrl()}/repos/{$this->github->getFullName()}/issues");
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -56,8 +63,8 @@ class Issues {
      *
      * @return int The currently set issue number, or -1 if no specific issue is selected.
      */
-    public function getIssue(): int {
-        return $this->issue;
+    public function getIssueNumber(): int {
+        return $this->issueNumber;
     }
 
     /**
@@ -68,16 +75,16 @@ class Issues {
      * @return array JSON response from the API containing the created comment.
      * @throws \InvalidArgumentException If the issue number is not set or is set to an invalid value.
      */
-    public function comment($comment, $options = []): array {
-        if (!$this->issue || $this->issue < 1) {
-            throw new \InvalidArgumentException("Issue number must be set to post a comment.");
-        }
+    public function comment($comment, $options = []): mixed {
+        $this->validate();
 
         $options = array_merge([
-            'body' => $comment
+            'post_data' => [
+                'body' => $comment
+            ],
         ], $options);
 
-        $ch = curl_init("{$this->github->getBaseUrl()}/repos/{$this->github->getFullName()}/issues/{$this->getIssue()}/comments");
+        $ch = curl_init("{$this->github->getBaseUrl()}/repos/{$this->github->getFullName()}/issues/{$this->getIssueNumber()}/comments");
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => [
@@ -87,7 +94,7 @@ class Issues {
                 "Content-Type: application/json"
             ],
             CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => json_encode($options)
+            CURLOPT_POSTFIELDS => json_encode($options['post_data'])
         ]);
 
         $response = curl_exec($ch);
@@ -106,14 +113,20 @@ class Issues {
      * @return array JSON response from the API containing the updated issue.
      * @throws \InvalidArgumentException If the issue number is not set or is set to an invalid value.
      */
-    public function updateIssue($title, $body, $issue,$options=[]): array{
+    public function updateIssue($options=[]): array{
+        $this->validate();
+        
         $options = array_merge([
-            "title" => $title,
-            "body" => $body,
-            'labels' => []
+            "post_data" => [
+                "title" => $this->issue['title'],
+                "body" => $this->issue['body'],
+                'labels' => $this->getLabelArray(),
+                'type' => '',
+                'assignees' => $this->getAssigneeArray()
+            ],
         ], $options);
 
-        $ch = curl_init("{$this->github->getBaseUrl()}/repos/{$this->github->getFullName()}/issues/$issue");
+        $ch = curl_init("{$this->github->getBaseUrl()}/repos/{$this->github->getFullName()}/issues/{$this->getIssueNumber()}");
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => [
@@ -123,7 +136,7 @@ class Issues {
                 "Content-Type: application/json"
             ],
             CURLOPT_CUSTOMREQUEST => "PATCH",
-            CURLOPT_POSTFIELDS => json_encode($options)
+            CURLOPT_POSTFIELDS => json_encode($options['post_data'])
         ]);
 
         $response = curl_exec($ch);
@@ -132,24 +145,26 @@ class Issues {
         return json_decode($response, true);
     }
 
-/*************  ✨ Windsurf Command ⭐  *************/
     /**
      * Creates a new issue.
      *
-     * @param string $title The issue title.
-     * @param string $body The issue body.
-     * @param array $options Optional parameters to pass to the API.
-     * @return array JSON response from the API containing the newly created issue.
+     * @param string $title The title of the issue to create.
+     * @param string $body The body of the issue to create.
+     * @param array $options Optional parameters to pass to the Github API.
+     * @return mixed The JSON response from the API, or the formatted issue data if $options['raw_response'] is false.
      */
-/*******  5e4a2312-c366-4221-b9f5-c62587b76538  *******/
     public function createIssue($title, $body, $options=[]): array {
         $options = array_merge([
-            "title" => $title,
-            "body" => $body,
-            'labels' => []
+            "post_data" => [
+                "title" => $title,
+                "body" => $body,
+                'labels' => [],
+                'type' => '',
+                'assignees' => []
+            ],
         ], $options);
 
-        $ch = curl_init("{$this->github->getBaseUrl()}/repos/{$this->github->getFullName()}/issues/");
+        $ch = curl_init("{$this->github->getBaseUrl()}/repos/{$this->github->getFullName()}/issues");
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => [
@@ -159,12 +174,100 @@ class Issues {
                 "Content-Type: application/json"
             ],
             CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => json_encode($options)
+            CURLOPT_POSTFIELDS => json_encode($options['post_data'])
+        ]);
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+        
+        $json = json_decode($response, true);
+        $issue_number = $json['number'] ?? null;
+        if ($issue_number) {
+            $this->setIssueNumber($issue_number);
+        }
+
+        return json_decode($response, true);
+    }
+
+
+    /**
+     * Retrieves the timeline of an issue.
+     * 
+     * This function takes an optional array of options to pass to the Github API.
+     * 
+     * The options array can contain the following keys:
+     * - raw_response: A boolean indicating whether to return the raw response from the Github API, or to format it using IssueFormatter::formatTimeline.
+     * 
+     * @param array $options Optional options to pass to the Github API.
+     * @return mixed The response from the Github API, or the formatted response using IssueFormatter::formatTimeline.
+     * @throws \InvalidArgumentException If the issue number is not set or is set to an invalid value.
+     */
+    public function getTimeline($options=[]): array {
+        $this->validate();
+
+        $ch = curl_init("{$this->github->getBaseUrl()}/repos/{$this->github->getFullName()}/issues/{$this->getIssueNumber()}/timeline");
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                "Authorization: token {$this->github->getToken()}",
+                "User-Agent: {$this->github->getOwner()}",
+                "Accept: application/vnd.github.v3+json",
+                "Content-Type: application/json"
+            ],
         ]);
 
         $response = curl_exec($ch);
         curl_close($ch);
         
         return json_decode($response, true);
+    }
+
+    public function initIssue($options=[]): array {
+        $this->validate();
+
+        $ch = curl_init("{$this->github->getBaseUrl()}/repos/{$this->github->getFullName()}/issues/{$this->getIssueNumber()}");
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                "Authorization: token {$this->github->getToken()}",
+                "User-Agent: {$this->github->getOwner()}",
+                "Accept: application/vnd.github.v3+json",
+                "Content-Type: application/json"
+            ],
+        ]);
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+        
+        $this->issue = json_decode($response, true);
+
+        return $this->issue;
+    }
+
+    public function getLabelArray(): array {
+        $labels = $this->issue['labels'] ?? [];
+        $labelNames = [];
+        foreach ($labels as $label) {
+            $labelNames[] = $label['name'];
+        }
+        return $labelNames;
+    }
+
+    public function getAssigneeArray(): array {
+        $this->validate();
+
+        $assignees = $this->issue['assignees'] ?? [];
+        $assigneeNames = [];
+        foreach ($assignees as $assignee) {
+            $assigneeNames[] = $assignee['login'];
+        }
+        return $assigneeNames;
+    }
+
+    public function validate(): bool {
+        if (!$this->issueNumber || $this->issueNumber < 1) {
+            throw new \InvalidArgumentException("Issue number must be set to post a comment.");
+        }
+        return true;
     }
 }
