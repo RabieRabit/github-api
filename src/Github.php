@@ -2,6 +2,7 @@
 
 namespace RabieRabit\GithubApi;
 
+use RabieRabit\GithubApi\Content\Content;
 use RabieRabit\GithubApi\Issues\Issues;
 
 class Github {
@@ -49,6 +50,10 @@ class Github {
      */
     public function issues(int $issue_number = 0): Issues {
         return new Issues($this, $issue_number);
+    }
+
+    public function content(): Content {
+        return new Content($this);
     }
 
     /**

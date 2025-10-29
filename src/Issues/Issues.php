@@ -2,7 +2,6 @@
 
 namespace RabieRabit\GithubApi\Issues;
 
-use RabieRabit\GithubApi\Formatter\IssueFormatter;
 use RabieRabit\GithubApi\Github;
 
 class Issues {
