@@ -61,7 +61,7 @@ class Issues {
         }
 
         $url = "{$this->github->getBaseUrl()}/repos/{$this->github->getFullName()}/issues?".http_build_query($options['filters']);
-        echo $url . "\n";
+        
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
