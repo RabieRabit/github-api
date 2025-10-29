@@ -270,4 +270,22 @@ class Issues {
         }
         return true;
     }
+
+    public function getAvailableLables(){
+        $ch = curl_init("{$this->github->getBaseUrl()}/repos/{$this->github->getFullName()}/labels");
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                "Authorization: token {$this->github->getToken()}",
+                "User-Agent: {$this->github->getOwner()}",
+                "Accept: application/vnd.github.v3+json",
+                "Content-Type: application/json"
+            ],
+        ]);
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        return json_decode($response, true);
+    }
 }
