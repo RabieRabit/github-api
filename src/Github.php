@@ -47,7 +47,7 @@ class Github {
      * @param int $issue_number Optional issue number to target. Use -1 (default) when no specific issue is selected.
      * @return Issues
      */
-    public function issues(int $issue_number = -1): Issues {
+    public function issues(int $issue_number = 0): Issues {
         return new Issues($this, $issue_number);
     }
 
