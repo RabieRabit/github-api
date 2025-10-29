@@ -17,7 +17,6 @@ class Issues {
      * @param int    $issue_number Optional issue number to target. Use -1 (default) when no specific issue is selected.
      */
     public function __construct(Github $github, int $issue_number = 0) {
-        echo $issue_number;
         $this->github = $github;
         if ($issue_number) $this->setIssueNumber($issue_number);
     }
