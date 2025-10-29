@@ -16,7 +16,8 @@ class Issues {
      * @param Github $github      The GitHub client instance used to perform API requests.
      * @param int    $issue_number Optional issue number to target. Use -1 (default) when no specific issue is selected.
      */
-    public function __construct(Github $github, int $issue_number = -1) {
+    public function __construct(Github $github, int $issue_number = 0) {
+        echo $issue_number;
         $this->github = $github;
         if ($issue_number) $this->setIssueNumber($issue_number);
     }
@@ -266,7 +267,7 @@ class Issues {
 
     public function validate(): bool {
         if (!$this->issueNumber || $this->issueNumber < 1) {
-            throw new \InvalidArgumentException("Issue number must be set to post a comment.");
+            throw new \InvalidArgumentException("Issue number must be set.");
         }
         return true;
     }
