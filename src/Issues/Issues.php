@@ -53,7 +53,12 @@ class Issues {
         ]);
 
         $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
+
+        if ($http_code !== 200) {
+            throw new \RuntimeException("Failed to issues: {$http_code}");
+        }
 
         return json_decode($response, true);
     }
@@ -98,7 +103,12 @@ class Issues {
         ]);
 
         $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
+
+        if ($http_code !== 200) {
+            throw new \RuntimeException("Failed to create comment: {$http_code}");
+        }
 
         return json_decode($response, true);
     }
@@ -140,7 +150,12 @@ class Issues {
         ]);
 
         $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
+
+        if ($http_code !== 200) {
+            throw new \RuntimeException("Failed to update issue: {$http_code}");
+        }
 
         return json_decode($response, true);
     }
@@ -178,7 +193,12 @@ class Issues {
         ]);
 
         $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
+
+        if ($http_code !== 200) {
+            throw new \RuntimeException("Failed to create issue: {$http_code}");
+        }
         
         $json = json_decode($response, true);
         $issue_number = $json['number'] ?? null;
@@ -217,7 +237,12 @@ class Issues {
         ]);
 
         $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
+
+        if ($http_code !== 200) {
+            throw new \RuntimeException("Failed to timeline: {$http_code}");
+        }
         
         return json_decode($response, true);
     }
@@ -237,7 +262,12 @@ class Issues {
         ]);
 
         $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
+
+        if ($http_code !== 200) {
+            throw new \RuntimeException("Failed Init Issue: {$http_code}");
+        }
         
         $this->issue = json_decode($response, true);
 
@@ -271,7 +301,7 @@ class Issues {
         return true;
     }
 
-    public function getAvailableLables(){
+    public function getAvailableLabels(){
         $ch = curl_init("{$this->github->getBaseUrl()}/repos/{$this->github->getFullName()}/labels");
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -284,7 +314,12 @@ class Issues {
         ]);
 
         $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
+
+        if ($http_code !== 200) {
+            throw new \RuntimeException("Failed to get available labels: {$http_code}");
+        }
 
         return json_decode($response, true);
     }
