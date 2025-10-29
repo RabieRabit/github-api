@@ -8,7 +8,7 @@ use RabieRabit\GithubApi\Github;
 class Issues {
     protected Github $github;
     protected array $issue;
-    protected int $issueNumber;
+    protected int $issueNumber = 0;
 
     /**
      * Initialize the Issues service.
@@ -18,7 +18,7 @@ class Issues {
      */
     public function __construct(Github $github, int $issue_number = -1) {
         $this->github = $github;
-        $this->setIssueNumber($issue_number);
+        if ($issue_number) $this->setIssueNumber($issue_number);
     }
     
     /**
