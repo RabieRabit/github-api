@@ -344,4 +344,12 @@ class Issues {
 
         return json_decode($response, true);
     }
+
+    public function getIssue($property = false){
+        $this->validate();
+        if($property){
+            return $this->issue[$property];
+        }
+        return $this->issue;
+    }
 }
