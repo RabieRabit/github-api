@@ -38,9 +38,31 @@ class Issues {
     public function list($options = []): array{
 
         $options = array_merge([
+            'filters' => [
+                "state" => false, // open, closed, all
+                "labels" => false, // comma separated label names
+                "sort" => false, // created, updated, comments
+                "direction" => false, // asc, desc
+                "per_page" => false, // default 30
+                "page" => false, // default 1
+                "milestone" => false, // milestone number or '*', 'none'
+                "assignee" => false, // assignee username or '*', 'none'
+                "type" => false, // issue, pr
+                "creator" => false, // creator username
+                "mentioned" => false, // mentioned username
+                "since" => false, // ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ
+            ]
         ], $options);
+        
+        foreach ($options['filters'] as $key => $value) {
+            if ($value === false) {
+                unset($options['filters'][$key]);
+            }
+        }
 
-        $ch = curl_init("{$this->github->getBaseUrl()}/repos/{$this->github->getFullName()}/issues");
+        $url = "{$this->github->getBaseUrl()}/repos/{$this->github->getFullName()}/issues?".http_build_query($options['filters']);
+        
+        $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => [
@@ -195,7 +217,7 @@ class Issues {
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        if ($http_code !== 200) {
+        if ($http_code !== 201) {
             throw new \RuntimeException("Failed to create issue: {$http_code}");
         }
         
