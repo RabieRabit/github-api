@@ -127,7 +127,7 @@ class Issues {
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        if ($http_code !== 200) {
+        if ($http_code !== 201) {
             throw new \RuntimeException("Failed to create comment: {$http_code}");
         }
 
