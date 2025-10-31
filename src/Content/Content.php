@@ -202,4 +202,30 @@ class Content {
 
         return $repo_data['default_branch'];
     }
+
+    public function getRepository($options = []){
+        $options = array_merge([
+        ], $options);
+
+        $ch = curl_init("{$this->github->getBaseUrl()}/repos/{$this->github->getFullName()}");
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                "Authorization: token {$this->github->getToken()}",
+                "User-Agent: {$this->github->getOwner()}",
+                "Accept: application/vnd.github.v3+json",
+                "Content-Type: application/json"
+            ],
+        ]);
+
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($http_code !== 200) {
+            throw new \RuntimeException("Failed get repository: {$http_code}");
+        }
+
+        return json_decode($response, true);
+    }
 }
